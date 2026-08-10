@@ -891,3 +891,378 @@ Deactivate Environment
 Creating a virtual environment is one of the first steps in setting up a FastAPI project. The `venv` module creates an isolated environment where project-specific packages such as **FastAPI** and **Uvicorn** can be installed without affecting the global Python installation. Activating the environment ensures all package installations remain local to the project, while deactivating it returns you to the global Python environment.
 
 Creating a FastAPI Virtual Environment (Windows)
+
+# Section 5 - FastAPI Request Method Logic
+
+# Books Project Introduction
+
+## Project Overview
+
+The **Books Project** is the first practical project used to learn the fundamentals of FastAPI and HTTP request methods.
+
+The project will start with a simple collection of books and gradually implement the basic operations required to manage them.
+
+The main goal is to understand how FastAPI handles:
+
+- HTTP requests
+- HTTP responses
+- CRUD operations
+- Request methods
+- Retrieving data
+- Creating data
+- Updating data
+- Deleting data
+
+---
+
+# Books Data
+
+The application will contain a list of books.
+
+Each book will contain key-value pairs such as:
+
+```text
+title
+author
+category
+```
+
+Example:
+
+```python
+books = [
+    {
+        "title": "Title 1",
+        "author": "Author 1",
+        "category": "science"
+    },
+    {
+        "title": "Title 2",
+        "author": "Author 2",
+        "category": "history"
+    },
+    {
+        "title": "Title 3",
+        "author": "Author 3",
+        "category": "math"
+    }
+]
+```
+
+The example project will contain books with titles and authors numbered from `1` to `5`, along with categories such as:
+
+- Science
+- History
+- Math
+
+---
+
+# CRUD Operations
+
+The application will use **CRUD operations** to manage books.
+
+CRUD stands for:
+
+| Operation | Meaning                 |
+| --------- | ----------------------- |
+| Create    | Add a new book          |
+| Read      | Retrieve existing books |
+| Update    | Modify an existing book |
+| Delete    | Remove a book           |
+
+These operations form the basic functionality of many backend applications.
+
+---
+
+## Create
+
+Create is used to add a new book to the collection.
+
+Example:
+
+```text
+Create Book
+     │
+     ▼
+Add new book to books list
+```
+
+---
+
+## Read
+
+Read is used to retrieve information.
+
+Examples:
+
+- Get all books
+- Get a specific book
+- Get books belonging to a category
+
+---
+
+## Update
+
+Update is used to modify an existing book.
+
+For example:
+
+```text
+Title 1
+Author 1
+Science
+```
+
+could be updated to:
+
+```text
+Title 1
+Author 10
+Science
+```
+
+---
+
+## Delete
+
+Delete removes a book from the collection.
+
+```text
+Book
+ │
+ ▼
+Delete
+ │
+ ▼
+Book removed from collection
+```
+
+---
+
+# Request and Response
+
+A fundamental concept in API development is **request and response**.
+
+The communication generally looks like this:
+
+```text
++-------------+                     +----------------+
+|             |      Request        |                |
+| Web Client  | ------------------> | FastAPI Server |
+|             |                     |                |
+|             |      Response       |                |
+|             | <------------------ |                |
++-------------+                     +----------------+
+```
+
+### Request
+
+The client sends a **request** to the FastAPI server.
+
+The request tells the server what operation the client wants to perform.
+
+For example:
+
+```text
+"Give me book 2"
+```
+
+### Response
+
+FastAPI processes the request and sends a **response** back to the client.
+
+Example:
+
+```json
+{
+  "title": "Title 2",
+  "author": "Author 2",
+  "category": "history"
+}
+```
+
+---
+
+# HTTP Request Methods
+
+Clients communicate their intended operation to the server using **HTTP request methods**, also commonly called HTTP verbs.
+
+HTTP methods describe what type of operation the client wants to perform.
+
+The basic methods used in this project are:
+
+| CRUD Operation | HTTP Method |
+| -------------- | ----------- |
+| Create         | `POST`      |
+| Read           | `GET`       |
+| Update         | `PUT`       |
+| Delete         | `DELETE`    |
+
+---
+
+# CRUD to HTTP Method Mapping
+
+```text
+CRUD Operation       HTTP Method
+
+Create       ───────► POST
+Read         ───────► GET
+Update       ───────► PUT
+Delete       ───────► DELETE
+```
+
+This mapping is a useful way to understand how REST APIs represent common data operations.
+
+---
+
+# GET Request
+
+The first HTTP method covered in the project is **GET**.
+
+`GET` is used to retrieve information from the server.
+
+For example:
+
+```text
+Client
+  │
+  │ GET /books
+  ▼
+FastAPI
+  │
+  │ Returns books
+  ▼
+Client
+```
+
+A GET request should generally be used for reading data rather than modifying data.
+
+---
+
+# Swagger UI
+
+FastAPI automatically provides interactive API documentation using **Swagger UI**.
+
+Swagger UI allows developers to:
+
+- View available API endpoints
+- See HTTP request methods
+- Understand the API structure
+- Send requests directly from the browser
+- Inspect API responses
+
+When running a FastAPI application locally, Swagger UI is available at:
+
+```text
+/docs
+```
+
+For example:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+The exact host and port may vary depending on how the FastAPI application is started.
+
+---
+
+# Why Swagger UI is Useful
+
+Instead of manually creating requests using tools such as Postman or `curl`, Swagger UI provides a browser-based interface for interacting with the API.
+
+For example, after creating:
+
+```http
+GET /books
+```
+
+Swagger UI can display the endpoint and allow you to execute the request directly.
+
+The response can then be inspected immediately.
+
+---
+
+# Books Project Learning Path
+
+The project will progressively implement the CRUD operations.
+
+```text
+Books Application
+       │
+       ├── GET
+       │    └── Read books
+       │
+       ├── POST
+       │    └── Create books
+       │
+       ├── PUT
+       │    └── Update books
+       │
+       └── DELETE
+            └── Delete books
+```
+
+The first implementation will focus on the **GET request** and retrieving book information from the FastAPI application.
+
+---
+
+# Key Concepts
+
+## API Request
+
+A message sent by a client to a server asking it to perform an operation or provide information.
+
+---
+
+## API Response
+
+The result returned by the server after processing a request.
+
+---
+
+## HTTP Method
+
+An HTTP method specifies the intended operation of a request.
+
+Common methods include:
+
+- `GET`
+- `POST`
+- `PUT`
+- `DELETE`
+
+---
+
+## CRUD
+
+CRUD represents the four fundamental data operations:
+
+- **Create**
+- **Read**
+- **Update**
+- **Delete**
+
+---
+
+## Swagger UI
+
+An interactive API documentation interface automatically available in FastAPI.
+
+FastAPI's Swagger UI is available at:
+
+```text
+/docs
+```
+
+---
+
+# Summary
+
+The Books Project introduces the fundamental concepts required to build APIs with FastAPI. The application manages a collection of books and uses **CRUD operations** to create, read, update, and delete them.
+
+Clients communicate with the FastAPI server through HTTP requests, and FastAPI returns HTTP responses. CRUD operations map naturally to HTTP methods: `POST` for Create, `GET` for Read, `PUT` for Update, and `DELETE` for Delete.
+
+FastAPI also provides **Swagger UI** automatically at `/docs`, making it easy to explore and test API endpoints directly from a browser.
+
+The first request method to implement in this project is **GET**, which will be used to retrieve book information.
