@@ -1266,3 +1266,371 @@ Clients communicate with the FastAPI server through HTTP requests, and FastAPI r
 FastAPI also provides **Swagger UI** automatically at `/docs`, making it easy to explore and test API endpoints directly from a browser.
 
 The first request method to implement in this project is **GET**, which will be used to retrieve book information.
+
+All right.
+
+Now that we've created our virtual environments, let's now go ahead and open up our directory of fast
+
+API.
+
+And let's create our first fast API application and API endpoint.
+
+So let's go ahead and say open on PyCharm.
+
+Let's go to our directory wherever we created that fast API and where we have our fast API environment
+
+inside.
+
+And let's go ahead and say open.
+
+Now when you click open, we're going to see that we have our fast API directory with our fast API environment
+
+within that directory where we're going to be creating our application.
+
+Now the very first thing we need to do is go down to our bottom right hand corner where it says no interpreter.
+
+Or it might create an interpreter for you, but we want to change that.
+
+So let's go down here and say add new interpreter.
+
+And we're going to say add local interpreter.
+
+Let's go over here and say existing.
+
+And inside here we want to change it to our fast API interpreter that we created using our virtual environment.
+
+So let's go ahead and go into our documents our fast API our fast API environment and inside our bin
+
+folder, if you are a mac user or inside your scripts folder, if you are a windows user, let's go
+
+ahead and select our Python 3.11 or whatever your newest version of Python is.
+
+And then let's go ahead and say okay, okay again.
+
+And now we have our fast API environment working on our IDE.
+
+So that's exactly what we wanted.
+
+All right.
+
+Now inside our directory let's go ahead and say right click new new Python file.
+
+And we're going to name this file books.
+
+Now the very first thing we need to do in books is import fast API.
+
+So we can say from fast API.
+
+Import fast API.
+
+Now the very next thing we need to say is app equals fast API.
+
+This allows Uvicorn to identify that hey, we are creating a new application of fast API, and this
+
+is importing all of the resources that we got from the very top.
+
+Then we want to say async def first API.
+
+And return a dictionary of message.
+
+Hello, Eric.
+
+And now that we have this function, we now need fast API to acknowledge that, hey, this is an API
+
+endpoint.
+
+How can we now call this using our appropriate API verbs?
+
+Well, right above this function we need to create a decorative and we're going to say at app dot get
+
+parentheses slash.
+
+So let's recap what we did right here.
+
+We imported fast API from fast API.
+
+We are acknowledging that this is going to be a fast API application, where we're setting app to what
+
+we're importing.
+
+For fast API, we created our own Python function of async, which stands for asynchronous dev, which
+
+is our function call first API.
+
+And we're going to return a message of hello Eric.
+
+And we added this annotation at the top, which then allows fast API to know that at this path we are
+
+going to be returning this method.
+
+So let's open up our terminal.
+
+Make sure your fast API environment is activated.
+
+And in here we are going to say Uvicorn books, Colon App, Dash, Dash, reload and Books is coming
+
+from the name of this file where our app is living.
+
+So books.py and our app is living inside this.
+
+So we're saying books is our app.
+
+We're going to reload and we're going to be calling our Uvicorn.
+
+So let's go ahead and press enter.
+
+When we do this we get this URL where our application is running.
+
+If we click this it's going to show us.
+
+Hello Eric.
+
+So if I zoom in a little bit we can see that it's going to print.
+
+Hello Eric.
+
+And that's because at our URL we have a slash at the end, which is exactly what our application is
+
+looking for of our URL with just an empty slash of a Get which is going to return message.
+
+Hello, Eric.
+
+Now, one thing to point out, if we remove asynchronous and we save, we can see our application reran
+
+and we reopen up our URL and we refresh.
+
+We can still see that it says message.
+
+Hello Eric.
+
+So the async is fairly optional for fast API.
+
+Now we can stop the server by clicking control C and that will stop our server from running.
+
+And there's a new way to be able to run fast API applications.
+
+If you have the newest version of fast API installed.
+
+And we can do this by saying fast API.
+
+Run and then the Python file you're trying to start.
+
+So books.py.
+
+This will start up the production mode of your fast API cli which will do the exact same thing.
+
+Or we could also go ahead and say dev if we type in dev right here, it's going to just bring up our
+
+development mode.
+
+And it's saying development mode and production mode because we can set up different instances within
+
+our code.
+
+But mostly for this course I'm going to be using Uvicorn.
+
+So we're going to be doing Uvicorn books, colon app, dash dash, reload.
+
+And that's because underneath our fast API run, um, the file it's going to be running this behind
+
+the scenes.
+
+So I'm going to run the course from this command right here of the Uvicorn main colon app.
+
+Dash dash.
+
+Reload.
+
+One thing to point out is that this slash is just going to be the end of our URL and port, and let's
+
+go ahead.
+
+Instead of just doing an empty slash, let's go ahead and just say API endpoint.
+
+All right.
+
+So now if we save the application and we open up our browser again.
+
+We can see if we refresh the page we're going to get detail not found at this slash.
+
+So what we need to do now is just go ahead and say slash API endpoint.
+
+And now we're going to get our message of hello Eric back.
+
+And now we can see that it's our URL, our port on our computer.
+
+And then slash API endpoint.
+
+Just like right here we are running fast API on that URL and port and then slash API endpoint.
+
+All right.
+
+And now with that this will wrap up this lecture on creating your first fast API application and our
+
+first API endpoint.
+
+So what are path parameters?
+
+Well, path parameters are request parameters that have been attached to the URL.
+
+Path parameters are usually defined as a way to find information based on location.
+
+So let's think of a computer file system.
+
+You can identify the specific resource based on the file in the path you are in.
+
+So if you went to slash users slash coding with RGB documents, Python Fast API, section one, you
+
+would expect to see section one in this path.
+
+So let's say we have a request.
+
+Our get request method of localhost port 8000 books.
+
+Well, if we look at our function, we can see app.get slash books, async def, read all books and
+
+we're going to return all the books.
+
+Well, we can see is that the path at the end of the URL matches the path that we're expecting in our
+
+fast API application.
+
+Now, this is a static path because books and books within the fast API application cannot be changed.
+
+We are deliberately saying slash books.
+
+However, in fast API you can make dynamic path parameters.
+
+So let's go ahead and say we have a request of read slash get and we have a new URL that's going to
+
+say localhost port 8000 slash books.
+
+Slash book one.
+
+Now Book one is what the user is typing in, but the user could also say book two or book three or book
+
+four or book all the way up to how many books are in application.
+
+Now, based on each book, we don't want to have to create a new API endpoint for book one and book
+
+two and book three.
+
+We want to be able to consume a dynamic path parameter that will return whatever information the user
+
+passes in.
+
+So let's say we have our application of app.get slash books, but this time we have a function that
+
+says async def, read all books and we have a dynamic param as our parameter for a read all books function.
+
+And then we say return dynamic param and we're going to pass in the dynamic param that's passed in as
+
+a parameter.
+
+Well in our API endpoint we can say slash curly brackets dynamic param.
+
+Now let's pay attention to what's going on when a request comes in of slash books.
+
+Slash book one.
+
+We can see that our API endpoint is slash books, slash curly brackets, dynamic param.
+
+So that means anything that's at the end of slash books or matches this URL.
+
+Let's grab that last variable and let's transform that into the dynamic param that we're passing in
+
+as a parameter.
+
+Now one thing that we need to note is that the API endpoint dynamic param that's in curly brackets needs
+
+to match the naming convention that we have as our parameter in our read all books function.
+
+So when we do this, we're going to get a response from fast API of dynamic Param Colon Book one, and
+
+that's because Book one is getting passed in as an API endpoint.
+
+We're going to grab that dynamic RAM, which is book one.
+
+We are then just going to be passing that variable of book one and calling it dynamic param, and then
+
+we're going to be returning that which is going to return book one.
+
+So dynamic parameters are used often and we're going to be creating them in this application.
+
+Now, one thing to note is that order matters with path parameters.
+
+So we have our request of localhost port 8000 slash books, slash my book.
+
+Well, if we have a function first, that is slash book slash dynamic param.
+
+And then underneath this we say app.get book.
+
+Slash my book.
+
+Well, the very first thing that's going to happen is my book is going to be transformed into the dynamic
+
+param of our first function.
+
+So our second function will never get called because the first function is accepting the exact same
+
+parameter list.
+
+So what we need to do is always have the static or the smaller APIs in front, because fast API looks
+
+in a chronological order from top to bottom to see what matches the URL that's coming in.
+
+So what we need to do is reverse the order and say books, my book.
+
+And then the second function can be the dynamic param.
+
+So if my book matches the first function of book, slash my book, well then we're going to return book
+
+title of my favorite book.
+
+And if the last variable in the path is something other than my book, well then the dynamic param is
+
+going to catch it.
+
+So if it's not my book, the dynamic parameter is going to catch it.
+
+And if it is my book, well then the very first static parameter is going to catch it.
+
+So we have our path parameters and right now we're just returning either the static or dynamic data
+
+that's getting passed in as the URL.
+
+But what we actually want to do is return books.
+
+So we have this books list, which is going to have all the books inside.
+
+So we're going to call the request by the title and then return that book when we type in a request
+
+that needs a space.
+
+We are going to use percent 20.
+
+So we can see our localhost slash books slash title percent 24.
+
+Now this essentially just means title space for so in an API URL you can't have spaces.
+
+So the encoding for a space is percent 20.
+
+So when we say book slash title 24, we're going to have our function that takes in a book title.
+
+We're going to explicitly say that this book title is going to be of type string.
+
+So we're going to say app dot, get slash books, slash curly brackets of book title, which is our
+
+dynamic parameter async def read book book title of type string, and then for book and book.
+
+So we're going to loop through all of the books.
+
+If book get titlecase fold and case fold is just a stronger lower function which will turn everything
+
+to lowercase equals book title case fold.
+
+So we're just making sure that we have matches on our strings.
+
+Then we're going to return that book.
+
+So the response is going to be that specific book of title for author for with our category of math.
