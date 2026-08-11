@@ -1634,3 +1634,784 @@ So we're just making sure that we have matches on our strings.
 Then we're going to return that book.
 
 So the response is going to be that specific book of title for author for with our category of math.
+
+# Section 5 - FastAPI Request Method Logic
+
+# Query Parameters
+
+## Overview
+
+After learning about **path parameters**, the next way to pass information to a FastAPI endpoint is through **query parameters**.
+
+Query parameters are commonly used to:
+
+- Filter data
+- Search data
+- Sort data
+- Control how data is returned
+
+Unlike path parameters, query parameters are not part of the URL path itself. They are added **after a `?`** in the URL.
+
+---
+
+# What are Query Parameters?
+
+A **query parameter** is a request parameter attached to the URL after a question mark (`?`).
+
+Query parameters follow a **name-value pair** format:
+
+```text
+name=value
+```
+
+For example:
+
+```text
+/books?category=math
+```
+
+Here:
+
+```text
+category = math
+```
+
+is the query parameter.
+
+- `category` → parameter name
+- `math` → parameter value
+
+---
+
+# Query Parameter URL Structure
+
+Consider:
+
+```text
+http://localhost:8000/books?category=math
+```
+
+The URL can be divided into:
+
+```text
+http://localhost:8000
+        │
+        └── Server
+
+/books
+        │
+        └── Path
+
+?category=math
+        │
+        └── Query Parameter
+```
+
+The `?` indicates the beginning of the query parameters.
+
+---
+
+# Query Parameter Example
+
+Suppose we want to retrieve books belonging to the `science` category.
+
+The request would be:
+
+```text
+GET /books?category=science
+```
+
+Here:
+
+```text
+Path:
+    /books
+
+Query Parameter:
+    category=science
+```
+
+The path remains `/books`, while the query parameter tells the application how to filter the results.
+
+---
+
+# Creating a Query Parameter in FastAPI
+
+A FastAPI endpoint can receive a query parameter simply by declaring it as a function parameter.
+
+Example:
+
+```python
+@app.get("/books")
+async def read_category_by_query(category: str):
+    ...
+```
+
+Here:
+
+```python
+category: str
+```
+
+is interpreted by FastAPI as a **query parameter** because `category` does not appear inside the path.
+
+The endpoint is:
+
+```python
+@app.get("/books")
+```
+
+while the function contains:
+
+```python
+category: str
+```
+
+FastAPI therefore expects:
+
+```text
+/books?category=some-value
+```
+
+---
+
+# How FastAPI Maps the Query Parameter
+
+Consider:
+
+```python
+@app.get("/books")
+async def read_category_by_query(category: str):
+    return {"category": category}
+```
+
+Request:
+
+```text
+GET /books?category=science
+```
+
+FastAPI extracts:
+
+```text
+category = "science"
+```
+
+and passes it to the function.
+
+Conceptually:
+
+```python
+read_category_by_query(category="science")
+```
+
+Response:
+
+```json
+{
+  "category": "science"
+}
+```
+
+---
+
+# Filtering Books Using a Query Parameter
+
+Suppose we have:
+
+```python
+books = [
+    {
+        "title": "Title 1",
+        "author": "Author 1",
+        "category": "science"
+    },
+    {
+        "title": "Title 2",
+        "author": "Author 2",
+        "category": "math"
+    },
+    {
+        "title": "Title 3",
+        "author": "Author 3",
+        "category": "science"
+    }
+]
+```
+
+We can use a query parameter to return only books from a particular category.
+
+```python
+@app.get("/books")
+async def read_category_by_query(category: str):
+    books_to_return = []
+
+    for book in books:
+        if book.get("category") == category:
+            books_to_return.append(book)
+
+    return books_to_return
+```
+
+---
+
+# Request
+
+The client can send:
+
+```text
+GET /books?category=science
+```
+
+FastAPI receives:
+
+```text
+category = "science"
+```
+
+The function then loops through the books:
+
+```python
+for book in books:
+```
+
+and checks:
+
+```python
+if book.get("category") == category:
+```
+
+Matching books are added to:
+
+```python
+books_to_return
+```
+
+Finally:
+
+```python
+return books_to_return
+```
+
+returns the filtered books.
+
+---
+
+# Example Response
+
+For:
+
+```text
+GET /books?category=science
+```
+
+the response could be:
+
+```json
+[
+  {
+    "title": "Title 1",
+    "author": "Author 1",
+    "category": "science"
+  },
+  {
+    "title": "Title 3",
+    "author": "Author 3",
+    "category": "science"
+  }
+]
+```
+
+---
+
+# Query Parameter Name Must Match
+
+The query parameter name in the URL must correspond to the function parameter.
+
+For example:
+
+```python
+@app.get("/books")
+async def read_category_by_query(category: str):
+    ...
+```
+
+expects:
+
+```text
+/books?category=science
+```
+
+because the function parameter is:
+
+```python
+category
+```
+
+If the URL is:
+
+```text
+/books?category=science
+```
+
+FastAPI maps:
+
+```text
+category → "science"
+```
+
+to:
+
+```python
+category: str
+```
+
+---
+
+# Query Parameters vs Path Parameters
+
+Path parameters and query parameters are different ways of passing information to an API.
+
+## Path Parameter
+
+Example:
+
+```text
+/books/Title%201
+```
+
+FastAPI:
+
+```python
+@app.get("/books/{book_title}")
+async def read_book(book_title: str):
+    ...
+```
+
+The value is part of the URL path.
+
+---
+
+## Query Parameter
+
+Example:
+
+```text
+/books?category=science
+```
+
+FastAPI:
+
+```python
+@app.get("/books")
+async def read_category_by_query(category: str):
+    ...
+```
+
+The value is provided after `?`.
+
+---
+
+# Comparison
+
+| Feature         | Path Parameter      | Query Parameter                     |
+| --------------- | ------------------- | ----------------------------------- |
+| Location        | Inside URL path     | After `?`                           |
+| Example         | `/books/book1`      | `/books?category=science`           |
+| Syntax          | `{parameter}`       | `parameter=value`                   |
+| Common Usage    | Identify a resource | Filter/search/control results       |
+| Required in URL | Usually yes         | Depends on the parameter definition |
+
+---
+
+# Combining Path and Query Parameters
+
+Path parameters and query parameters can be used together.
+
+For example:
+
+```text
+GET /books/Author%204?category=science
+```
+
+This contains:
+
+### Path Parameter
+
+```text
+author = "Author 4"
+```
+
+### Query Parameter
+
+```text
+category = "science"
+```
+
+The path identifies the author, while the query parameter filters the results by category.
+
+---
+
+# FastAPI Example
+
+```python
+@app.get("/books/{book_author}")
+async def read_author_category(
+    book_author: str,
+    category: str
+):
+    ...
+```
+
+FastAPI interprets:
+
+```python
+book_author: str
+```
+
+as a **path parameter** because it appears in:
+
+```text
+/books/{book_author}
+```
+
+And:
+
+```python
+category: str
+```
+
+as a **query parameter** because it does not appear in the path.
+
+---
+
+# Request Flow
+
+Consider:
+
+```text
+GET /books/Author%204?category=science
+```
+
+The flow is:
+
+```text
+Client
+   │
+   │ GET /books/Author%204?category=science
+   ▼
+FastAPI
+   │
+   ├── Path Parameter
+   │      book_author = "Author 4"
+   │
+   └── Query Parameter
+          category = "science"
+   │
+   ▼
+Python Function
+   │
+   ▼
+Filter/Search Books
+   │
+   ▼
+Response
+```
+
+---
+
+# Important Difference
+
+Consider this endpoint:
+
+```python
+@app.get("/books/{book_author}")
+async def read_author_category(
+    book_author: str,
+    category: str
+):
+    ...
+```
+
+The URL:
+
+```text
+/books/Author%204?category=science
+```
+
+is interpreted as:
+
+```text
+/books/{book_author}?category={category}
+```
+
+Result:
+
+```text
+book_author = "Author 4"
+category = "science"
+```
+
+So FastAPI can automatically distinguish between:
+
+- Values belonging to the URL path
+- Values belonging to the query string
+
+---
+
+# Multiple Query Parameters
+
+An endpoint can also accept multiple query parameters.
+
+For example:
+
+```text
+/books?category=science&author=Author%204
+```
+
+Here there are two query parameters:
+
+```text
+category = science
+author   = Author 4
+```
+
+Query parameters are separated using `&`.
+
+General structure:
+
+```text
+/path?parameter1=value1&parameter2=value2
+```
+
+---
+
+# URL Structure
+
+A complete URL can therefore contain:
+
+```text
+http://localhost:8000/books/Author%204?category=science
+│                     │       │
+│                     │       └── Query Parameter
+│                     │
+│                     └── Path Parameter
+│
+└── Server
+```
+
+More generally:
+
+```text
+scheme://host:port/path/{path_parameter}?query_parameter=value
+```
+
+---
+
+# Key Concepts
+
+## Query Parameter
+
+A parameter provided after `?` in a URL.
+
+Example:
+
+```text
+?category=science
+```
+
+---
+
+## Query Parameter Name
+
+The name before `=`:
+
+```text
+category
+```
+
+---
+
+## Query Parameter Value
+
+The value after `=`:
+
+```text
+science
+```
+
+---
+
+## Multiple Query Parameters
+
+Multiple parameters are separated using `&`.
+
+Example:
+
+```text
+/books?category=science&author=Author%204
+```
+
+---
+
+## Path Parameter + Query Parameter
+
+Both can be used in the same request.
+
+Example:
+
+```text
+/books/Author%204?category=science
+```
+
+---
+
+# Complete Example
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+books = [
+    {
+        "title": "Title 1",
+        "author": "Author 1",
+        "category": "science"
+    },
+    {
+        "title": "Title 2",
+        "author": "Author 2",
+        "category": "math"
+    },
+    {
+        "title": "Title 3",
+        "author": "Author 3",
+        "category": "science"
+    },
+    {
+        "title": "Title 4",
+        "author": "Author 4",
+        "category": "science"
+    }
+]
+
+
+@app.get("/books")
+async def read_category_by_query(category: str):
+    books_to_return = []
+
+    for book in books:
+        if book.get("category") == category:
+            books_to_return.append(book)
+
+    return books_to_return
+
+
+@app.get("/books/{book_author}")
+async def read_author_category(
+    book_author: str,
+    category: str
+):
+    books_to_return = []
+
+    for book in books:
+        if (
+            book.get("author") == book_author
+            and book.get("category") == category
+        ):
+            books_to_return.append(book)
+
+    return books_to_return
+```
+
+---
+
+# Summary
+
+Query parameters provide additional information to an API through the URL after a `?`.
+
+For example:
+
+```text
+/books?category=science
+```
+
+Here:
+
+```text
+category=science
+```
+
+is a query parameter represented as a name-value pair.
+
+In FastAPI, a parameter that is not part of the path is automatically treated as a query parameter:
+
+```python
+@app.get("/books")
+async def read_category_by_query(category: str):
+    ...
+```
+
+Query parameters are commonly used for filtering, searching, sorting, and controlling the returned data.
+
+Path parameters and query parameters can also be combined:
+
+```text
+/books/Author%204?category=science
+```
+
+where:
+
+```text
+Author 4 → Path Parameter
+science  → Query Parameter
+```
+
+Understanding the difference between path parameters and query parameters is essential for designing and consuming RESTful APIs.
+
+Now we're going to move on to a new HTTP request method known as a post request method.
+
+So what is a post request method?
+
+Will they post request method is used to create data.
+
+Post can have a body that has additional information that Getrillionequests do not have.
+
+So an example of a body is we are able to pass in a entire book that is not part of the URL in the request
+
+so that our fast API application can use it.
+
+So if, for example, you can see that we have a new book of Title seven with an author of two and category
+
+of math.
+
+So our author two created a new book which is called Title seven.
+
+And we're able to pass this request as a post to our backend application, which is our fast API.
+
+So let's take a closer look.
+
+So our request might be just our localhost port, 8000 slash books, slash create book.
+
+So we're not using any kind of query parameters and we're not using any kind of dynamic path parameters.
+
+So our function is going to be app.post.
+
+So instead of dot get, we're using.post and then slash books, slash create book.
+
+We then have a new python function of async def create book and we're passing in a new variable called
+
+new book.
+
+Well, this new book is going to be equal to body.
+
+Therefore, the new book variable is going to be equal to whatever we're passing in as the body of this
+
+post request.
+
+Well, we know that this body is going to be exact same information of a new book.
+
+So then we can just go ahead and say books dot append the new book because new book is that new book
+
+that we're passing in as the body.
