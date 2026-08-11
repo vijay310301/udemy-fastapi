@@ -2415,3 +2415,531 @@ Well, we know that this body is going to be exact same information of a new book
 So then we can just go ahead and say books dot append the new book because new book is that new book
 
 that we're passing in as the body.
+
+Well, a put request method is used to update data.
+
+A put can have a body that has additional information like a post that git does not have.
+
+So an example of a body for a put is going to look exactly like the body of a post.
+
+So, for example, instead of creating a new book, we're going to pass in a book that already exists,
+
+but we're going to be able to change the category or the author because we're going to look at the titles
+
+of the two books and then change the author or category or whichever has changed.
+
+So let's go ahead and look at a put request method.
+
+So if we remember a put is an update and we're going to have our local host with Port 8000 slash books
+
+and then slash update book, which is a non dynamic path parameter.
+
+We are then going to write a new function within our fast API application where we're going to be using
+
+app dot put and our path is going to be book slash update book.
+
+And then we're going to have our function of async def update book where we're going to create a new
+
+variable of updated book as a parameter which is equal to the body that we're passing in.
+
+And then for I, in range of the length of books, we're going to look at each book to see if the title
+
+caseload matches the updated book that we're passing in as the body.
+
+And if it does, then we're just going to swap out that location with the new book and update that location
+
+within the list with the new book.
+
+So he put in a post are pretty similar when it comes to being able to have body information.
+
+But we just got to remember that post is for creating data while a put is for updating data.
+
+And with that, let's dive into the code and create our first put request method.
+
+# Section 5 - FastAPI Request Method Logic
+
+# DELETE Request
+
+## Overview
+
+The **DELETE** HTTP request method is used to **delete existing data** from the server.
+
+In the Books project, we will use a DELETE request to remove a specific book from the books collection.
+
+The book to delete will be identified using a **path parameter** containing the book title.
+
+---
+
+# DELETE Endpoint
+
+A DELETE endpoint is created using:
+
+```python
+@app.delete()
+```
+
+For example:
+
+```python
+@app.delete("/books/delete-book/{book_title}")
+async def delete_book(book_title: str):
+    ...
+```
+
+Here:
+
+```text
+/books/delete-book/{book_title}
+```
+
+contains a dynamic path parameter:
+
+```text
+book_title
+```
+
+---
+
+# Example Request
+
+Suppose we want to delete:
+
+```text
+Title 2
+```
+
+The client can send:
+
+```text
+DELETE /books/delete-book/Title%202
+```
+
+Here:
+
+```text
+/books/delete-book
+```
+
+is the static path.
+
+And:
+
+```text
+Title%202
+```
+
+is the dynamic path parameter.
+
+After URL decoding:
+
+```text
+Title%202
+```
+
+becomes:
+
+```text
+Title 2
+```
+
+So FastAPI receives:
+
+```python
+book_title = "Title 2"
+```
+
+---
+
+# Finding the Book
+
+The application needs to find the book that matches the provided title.
+
+We can loop through the books:
+
+```python
+for i in range(len(books)):
+```
+
+For every book, we compare its title with the requested `book_title`.
+
+For example:
+
+```python
+if books[i].get("title", "").casefold() == book_title.casefold():
+```
+
+If the titles match, we have found the book that needs to be deleted.
+
+---
+
+# Deleting the Book
+
+Once the matching book is found, we can remove it from the list using:
+
+```python
+books.pop(i)
+```
+
+`pop()` removes the item at the specified index.
+
+For example:
+
+```python
+books.pop(2)
+```
+
+removes the book at index `2`.
+
+---
+
+# Breaking Out of the Loop
+
+After deleting the book, we should stop searching:
+
+```python
+break
+```
+
+This is because we have already found and deleted the required book.
+
+There is no reason to continue looping through the remaining books.
+
+---
+
+# Complete Example
+
+```python
+@app.delete("/books/delete-book/{book_title}")
+async def delete_book(book_title: str):
+    for i in range(len(books)):
+        if books[i].get("title", "").casefold() == book_title.casefold():
+            books.pop(i)
+            break
+```
+
+The logic is:
+
+```text
+Receive book title
+       ↓
+Loop through books
+       ↓
+Compare titles
+       ↓
+Title matches?
+   ┌───┴───┐
+   │       │
+  No      Yes
+   │       │
+Continue  Delete book
+loop      │
+           ↓
+          break
+```
+
+---
+
+# Example
+
+Suppose our books list contains:
+
+```python
+books = [
+    {
+        "title": "Title 1",
+        "author": "Author 1",
+        "category": "science"
+    },
+    {
+        "title": "Title 2",
+        "author": "Author 2",
+        "category": "math"
+    },
+    {
+        "title": "Title 3",
+        "author": "Author 3",
+        "category": "history"
+    }
+]
+```
+
+The client sends:
+
+```text
+DELETE /books/delete-book/Title%202
+```
+
+FastAPI extracts:
+
+```python
+book_title = "Title 2"
+```
+
+The application finds:
+
+```python
+{
+    "title": "Title 2",
+    "author": "Author 2",
+    "category": "math"
+}
+```
+
+and executes:
+
+```python
+books.pop(1)
+```
+
+The resulting list becomes:
+
+```python
+books = [
+    {
+        "title": "Title 1",
+        "author": "Author 1",
+        "category": "science"
+    },
+    {
+        "title": "Title 3",
+        "author": "Author 3",
+        "category": "history"
+    }
+]
+```
+
+`Title 2` has been removed.
+
+---
+
+# DELETE Request Flow
+
+```text
+Client
+  │
+  │ DELETE /books/delete-book/Title%202
+  │
+  ▼
+FastAPI
+  │
+  ▼
+book_title = "Title 2"
+  │
+  ▼
+Loop through books
+  │
+  ▼
+Find matching title
+  │
+  ▼
+books.pop(index)
+  │
+  ▼
+break
+  │
+  ▼
+Book deleted
+```
+
+---
+
+# Why Use a Path Parameter?
+
+The path parameter identifies **which specific resource should be deleted**.
+
+For example:
+
+```text
+DELETE /books/delete-book/Title%202
+```
+
+means:
+
+> Delete the book identified by `Title 2`.
+
+Similarly, in a real application we might have:
+
+```text
+DELETE /users/101
+```
+
+which could mean:
+
+> Delete the user with ID `101`.
+
+Or:
+
+```text
+DELETE /products/500
+```
+
+which could mean:
+
+> Delete product `500`.
+
+---
+
+# CRUD Operations
+
+At this point, we have covered the four basic CRUD operations.
+
+| CRUD Operation | HTTP Method | Purpose              |
+| -------------- | ----------- | -------------------- |
+| Create         | POST        | Create new data      |
+| Read           | GET         | Retrieve data        |
+| Update         | PUT         | Update existing data |
+| Delete         | DELETE      | Delete existing data |
+
+The mapping is:
+
+```text
+Create → POST
+Read   → GET
+Update → PUT
+Delete → DELETE
+```
+
+---
+
+# Complete CRUD Flow for Books
+
+Our Books application can now perform:
+
+### 1. Create
+
+```text
+POST /books/create-book
+```
+
+```python
+books.append(new_book)
+```
+
+---
+
+### 2. Read
+
+```text
+GET /books
+```
+
+Returns the books collection.
+
+---
+
+### 3. Update
+
+```text
+PUT /books/update-book
+```
+
+```python
+books[i] = updated_book
+```
+
+---
+
+### 4. Delete
+
+```text
+DELETE /books/delete-book/{book_title}
+```
+
+```python
+books.pop(i)
+```
+
+---
+
+# Important Concepts
+
+## `@app.delete()`
+
+FastAPI decorator used to create a DELETE endpoint.
+
+```python
+@app.delete("/books/delete-book/{book_title}")
+```
+
+---
+
+## Dynamic Path Parameter
+
+The book title is passed through the URL:
+
+```text
+{book_title}
+```
+
+FastAPI passes this value to:
+
+```python
+book_title: str
+```
+
+---
+
+## `pop()`
+
+Python list method used to remove an item at a particular index:
+
+```python
+books.pop(i)
+```
+
+---
+
+## `break`
+
+Stops the loop after the matching book has been deleted:
+
+```python
+break
+```
+
+---
+
+# Summary
+
+The **DELETE** HTTP request method is used to remove existing data from the server.
+
+In the Books project, the book title is provided as a dynamic path parameter:
+
+```python
+@app.delete("/books/delete-book/{book_title}")
+```
+
+The application searches through the books collection:
+
+```python
+for i in range(len(books)):
+```
+
+and compares each book's title:
+
+```python
+if books[i].get("title", "").casefold() == book_title.casefold():
+```
+
+When a match is found, the book is removed:
+
+```python
+books.pop(i)
+```
+
+and the loop is stopped:
+
+```python
+break
+```
+
+The four basic HTTP methods covered in this section are:
+
+```text
+POST   → Create
+GET    → Read
+PUT    → Update
+DELETE → Delete
+```
+
+These operations form the foundation of **CRUD-based RESTful APIs**.
