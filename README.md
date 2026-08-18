@@ -2943,3 +2943,799 @@ DELETE → Delete
 ```
 
 These operations form the foundation of **CRUD-based RESTful APIs**.
+
+# Section 6 - Pydantic
+
+# Pydantic and Data Validation in FastAPI
+
+## Overview
+
+When building an API, the application receives data from external clients.
+
+For example, when creating a new book, the client might send:
+
+```json
+{
+  "id": 1,
+  "title": "Python Fundamentals",
+  "author": "John Doe",
+  "description": "An introduction to Python.",
+  "rating": 5
+}
+```
+
+However, we cannot always assume that incoming data is valid.
+
+A client could send:
+
+```json
+{
+  "title": "",
+  "author": 123,
+  "rating": 100
+}
+```
+
+This is where **Pydantic** and data validation become important.
+
+Pydantic allows us to define the expected structure and validation rules for incoming data.
+
+---
+
+# What is Pydantic?
+
+**Pydantic** is a Python library used for:
+
+- Data modeling
+- Data parsing
+- Data validation
+- Type validation
+- Error handling
+
+FastAPI uses Pydantic extensively to validate and process request and response data.
+
+Instead of manually checking every value received from the client, we can define a model that describes what valid data should look like.
+
+---
+
+# The Problem Without Data Validation
+
+Suppose we create a book endpoint without defining a data model:
+
+```python
+@app.post("/books/create-book")
+async def create_book(new_book):
+    books.append(new_book)
+```
+
+The API does not clearly define:
+
+- Which fields are required
+- Which data types are expected
+- What values are valid
+- Whether a title is empty
+- Whether a rating is within an acceptable range
+
+For example, a client could potentially send incorrect data.
+
+We need a structured way to define the expected request data.
+
+---
+
+# Pydantic Models
+
+Pydantic allows us to create models using Python classes.
+
+A typical request model might look like:
+
+```python
+from pydantic import BaseModel
+
+
+class BookRequest(BaseModel):
+    id: int
+    title: str
+    author: str
+    description: str
+    rating: int
+```
+
+The model defines the structure of a valid book request.
+
+---
+
+# `BaseModel`
+
+The important part of a Pydantic model is:
+
+```python
+BaseModel
+```
+
+For example:
+
+```python
+class BookRequest(BaseModel):
+```
+
+By inheriting from `BaseModel`, the class becomes a Pydantic model.
+
+This provides functionality such as:
+
+- Data validation
+- Type parsing
+- Structured error responses
+- Data serialization
+
+FastAPI can use this model to validate incoming request data automatically.
+
+---
+
+# Book Request Model
+
+Consider:
+
+```python
+class BookRequest(BaseModel):
+    id: int
+    title: str
+    author: str
+    description: str
+    rating: int
+```
+
+This model expects the following structure:
+
+| Field         | Expected Type |
+| ------------- | ------------- |
+| `id`          | `int`         |
+| `title`       | `str`         |
+| `author`      | `str`         |
+| `description` | `str`         |
+| `rating`      | `int`         |
+
+A valid request might be:
+
+```json
+{
+  "id": 1,
+  "title": "Python Fundamentals",
+  "author": "John Doe",
+  "description": "An introduction to Python.",
+  "rating": 5
+}
+```
+
+---
+
+# How FastAPI Uses the Pydantic Model
+
+The model can be used directly as a parameter in an endpoint.
+
+```python
+@app.post("/books/create-book")
+async def create_book(book_request: BookRequest):
+    ...
+```
+
+Here:
+
+```python
+book_request: BookRequest
+```
+
+tells FastAPI that the request body should match the `BookRequest` model.
+
+The flow is:
+
+```text
+Client
+   │
+   │ Sends JSON request body
+   ▼
+FastAPI
+   │
+   ▼
+BookRequest Pydantic Model
+   │
+   ├── Validate fields
+   ├── Validate data types
+   └── Parse request data
+   │
+   ▼
+Valid?
+ ┌────┴────┐
+ │         │
+No        Yes
+ │         │
+ ▼         ▼
+Validation  Pass validated
+Error       data to endpoint
+```
+
+---
+
+# Adding Validation with `Field`
+
+Pydantic also provides `Field` for adding additional validation and metadata to model fields.
+
+For example:
+
+```python
+from pydantic import BaseModel, Field
+
+
+class BookRequest(BaseModel):
+    id: int
+    title: str = Field(min_length=3)
+    author: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    rating: int = Field(gt=0, le=5)
+```
+
+Here, `Field` defines additional validation rules.
+
+---
+
+# Example Validation Rules
+
+## String Length
+
+```python
+title: str = Field(min_length=3)
+```
+
+The title must contain at least 3 characters.
+
+Valid:
+
+```text
+Python
+```
+
+Invalid:
+
+```text
+Py
+```
+
+---
+
+## Numeric Range
+
+```python
+rating: int = Field(gt=0, le=5)
+```
+
+This means:
+
+```text
+rating > 0
+rating <= 5
+```
+
+Valid values:
+
+```text
+1
+2
+3
+4
+5
+```
+
+Invalid values:
+
+```text
+0
+6
+10
+```
+
+---
+
+# Request Model vs Application Model
+
+The course introduces the idea of having a separate model for incoming requests.
+
+For example:
+
+```python
+class Book:
+    ...
+```
+
+may represent a book used internally by the application.
+
+While:
+
+```python
+class BookRequest(BaseModel):
+    ...
+```
+
+represents the data received from the API request.
+
+Conceptually:
+
+```text
+Client Request
+      │
+      ▼
+BookRequest
+(Pydantic validation)
+      │
+      ▼
+Validated Request Data
+      │
+      ▼
+Book
+(Application object/model)
+      │
+      ▼
+Store in books collection
+```
+
+The request model is responsible for validating incoming data before it is used by the application.
+
+---
+
+# Using the Pydantic Model in a POST Request
+
+Consider:
+
+```python
+@app.post("/books/create-book")
+async def create_book(book_request: BookRequest):
+    ...
+```
+
+When the client sends:
+
+```json
+{
+  "id": 1,
+  "title": "Python Fundamentals",
+  "author": "John Doe",
+  "description": "An introduction to Python.",
+  "rating": 5
+}
+```
+
+FastAPI converts the validated request data into a `BookRequest` object.
+
+Inside the function, we can access values such as:
+
+```python
+book_request.title
+```
+
+or:
+
+```python
+book_request.author
+```
+
+---
+
+# Converting a Pydantic Model to a Dictionary
+
+The course demonstrates converting the request model into a dictionary.
+
+In Pydantic v2, the preferred method is:
+
+```python
+book_request.model_dump()
+```
+
+This produces a dictionary such as:
+
+```python
+{
+    "id": 1,
+    "title": "Python Fundamentals",
+    "author": "John Doe",
+    "description": "An introduction to Python.",
+    "rating": 5
+}
+```
+
+> In older Pydantic versions, `.dict()` was commonly used. In Pydantic v2, `.model_dump()` is the recommended approach.
+
+---
+
+# The Double Asterisk (`**`) Operator
+
+Suppose we have a dictionary:
+
+```python
+book_data = {
+    "id": 1,
+    "title": "Python Fundamentals",
+    "author": "John Doe",
+    "description": "An introduction to Python.",
+    "rating": 5
+}
+```
+
+The double asterisk operator:
+
+```python
+**
+```
+
+unpacks dictionary key-value pairs as keyword arguments.
+
+For example:
+
+```python
+Book(**book_data)
+```
+
+is conceptually similar to:
+
+```python
+Book(
+    id=1,
+    title="Python Fundamentals",
+    author="John Doe",
+    description="An introduction to Python.",
+    rating=5
+)
+```
+
+The keys in the dictionary are matched with the corresponding parameters of the `Book` constructor.
+
+---
+
+# Converting `BookRequest` to a `Book`
+
+Suppose we have:
+
+```python
+class BookRequest(BaseModel):
+    id: int
+    title: str
+    author: str
+    description: str
+    rating: int
+```
+
+and an application model:
+
+```python
+class Book:
+    def __init__(
+        self,
+        id: int,
+        title: str,
+        author: str,
+        description: str,
+        rating: int
+    ):
+        self.id = id
+        self.title = title
+        self.author = author
+        self.description = description
+        self.rating = rating
+```
+
+We can convert the validated request into a `Book` object:
+
+```python
+new_book = Book(**book_request.model_dump())
+```
+
+The process is:
+
+```text
+BookRequest
+    │
+    ▼
+model_dump()
+    │
+    ▼
+Dictionary
+    │
+    ▼
+** Dictionary Unpacking
+    │
+    ▼
+Book Constructor
+    │
+    ▼
+New Book Object
+```
+
+---
+
+# Complete Example
+
+```python
+from fastapi import FastAPI
+from pydantic import BaseModel, Field
+
+app = FastAPI()
+
+
+class BookRequest(BaseModel):
+    id: int
+    title: str = Field(min_length=3)
+    author: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    rating: int = Field(gt=0, le=5)
+
+
+class Book:
+    def __init__(
+        self,
+        id: int,
+        title: str,
+        author: str,
+        description: str,
+        rating: int
+    ):
+        self.id = id
+        self.title = title
+        self.author = author
+        self.description = description
+        self.rating = rating
+
+
+books = []
+
+
+@app.post("/books/create-book")
+async def create_book(book_request: BookRequest):
+    new_book = Book(**book_request.model_dump())
+
+    books.append(new_book)
+
+    return {
+        "message": "Book created successfully"
+    }
+```
+
+---
+
+# Request Flow
+
+When the client sends:
+
+```json
+{
+  "id": 1,
+  "title": "Python Fundamentals",
+  "author": "John Doe",
+  "description": "An introduction to Python.",
+  "rating": 5
+}
+```
+
+the request follows this flow:
+
+```text
+Client
+   │
+   │ POST Request
+   │
+   ▼
+FastAPI Endpoint
+   │
+   ▼
+BookRequest
+   │
+   ├── Validate ID
+   ├── Validate title
+   ├── Validate author
+   ├── Validate description
+   └── Validate rating
+   │
+   ▼
+Validation Successful
+   │
+   ▼
+book_request.model_dump()
+   │
+   ▼
+Dictionary
+   │
+   ▼
+Book(**dictionary)
+   │
+   ▼
+New Book Object
+   │
+   ▼
+books.append(new_book)
+```
+
+---
+
+# What Happens When Validation Fails?
+
+Suppose the request contains:
+
+```json
+{
+  "id": 1,
+  "title": "Py",
+  "author": "",
+  "description": "",
+  "rating": 10
+}
+```
+
+Based on the validation rules:
+
+```python
+title: str = Field(min_length=3)
+author: str = Field(min_length=1)
+description: str = Field(min_length=1)
+rating: int = Field(gt=0, le=5)
+```
+
+the request is invalid.
+
+FastAPI automatically returns a validation error response.
+
+The endpoint function will not continue with invalid data.
+
+This prevents invalid data from reaching the application's business logic.
+
+---
+
+# Why Use Pydantic?
+
+Without Pydantic, we may need to manually validate incoming data:
+
+```python
+if not isinstance(title, str):
+    ...
+
+if len(title) < 3:
+    ...
+
+if rating < 1 or rating > 5:
+    ...
+```
+
+With Pydantic, we can define the validation rules directly in the data model:
+
+```python
+class BookRequest(BaseModel):
+    title: str = Field(min_length=3)
+    rating: int = Field(gt=0, le=5)
+```
+
+This makes the code more:
+
+- Structured
+- Readable
+- Maintainable
+- Reliable
+
+---
+
+# Important Concepts
+
+## Pydantic
+
+A Python library used for data modeling, parsing, and validation.
+
+---
+
+## `BaseModel`
+
+The base class used to create a Pydantic model.
+
+```python
+class BookRequest(BaseModel):
+```
+
+---
+
+## `Field`
+
+Used to define additional validation rules and metadata for a field.
+
+```python
+title: str = Field(min_length=3)
+```
+
+---
+
+## Request Model
+
+A model representing data received from an API request.
+
+```python
+class BookRequest(BaseModel):
+```
+
+---
+
+## `model_dump()`
+
+Converts a Pydantic model into a dictionary.
+
+```python
+book_request.model_dump()
+```
+
+---
+
+## `**` Dictionary Unpacking
+
+Passes dictionary values as keyword arguments.
+
+```python
+Book(**book_request.model_dump())
+```
+
+---
+
+# Summary
+
+**Pydantic** is a core part of FastAPI's data validation system.
+
+It allows us to define the expected structure of incoming data using Python classes.
+
+A Pydantic request model inherits from:
+
+```python
+BaseModel
+```
+
+For example:
+
+```python
+class BookRequest(BaseModel):
+    id: int
+    title: str
+    author: str
+    description: str
+    rating: int
+```
+
+FastAPI uses this model to validate incoming request data automatically.
+
+Additional validation can be added using:
+
+```python
+Field()
+```
+
+For example:
+
+```python
+rating: int = Field(gt=0, le=5)
+```
+
+After validation, the Pydantic model can be converted into a dictionary using:
+
+```python
+book_request.model_dump()
+```
+
+The dictionary can then be unpacked into another object using:
+
+```python
+Book(**book_request.model_dump())
+```
+
+The overall flow is:
+
+```text
+Request
+   ↓
+Pydantic Model
+   ↓
+Data Validation
+   ↓
+Validated Data
+   ↓
+Application Logic
+```
+
+Pydantic helps ensure that invalid or incorrectly structured data is rejected before it reaches the main application logic, making FastAPI applications more reliable and easier to maintain.
