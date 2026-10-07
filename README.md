@@ -3739,3 +3739,1149 @@ Application Logic
 ```
 
 Pydantic helps ensure that invalid or incorrectly structured data is rejected before it reaches the main application logic, making FastAPI applications more reliable and easier to maintain.
+
+# Section 6 - Pydantic
+
+# HTTP Status Codes
+
+## Overview
+
+An **HTTP status code** is returned by a server to communicate the result of an HTTP request to the client.
+
+The client could be:
+
+- A web browser
+- A frontend application
+- A mobile application
+- Another backend service
+- An API client such as Postman
+
+Status codes provide a standardized way for the client to understand what happened when the server processed a request.
+
+For example:
+
+```text
+Client
+  │
+  │ HTTP Request
+  ▼
+FastAPI Server
+  │
+  │ HTTP Response + Status Code
+  ▼
+Client
+```
+
+The status code tells the client whether the request was successful, redirected, invalid, or failed because of a server-side problem.
+
+---
+
+# HTTP Status Code Categories
+
+HTTP status codes are grouped into five major categories based on their first digit.
+
+| Range | Category      | Meaning                                             |
+| ----- | ------------- | --------------------------------------------------- |
+| `1xx` | Informational | Request is being processed / additional information |
+| `2xx` | Success       | Request was successfully processed                  |
+| `3xx` | Redirection   | Further action is required                          |
+| `4xx` | Client Error  | Problem with the request from the client            |
+| `5xx` | Server Error  | Problem occurred on the server                      |
+
+For this course, the most important categories are:
+
+```text
+2xx → Successful requests
+4xx → Client errors
+5xx → Server errors
+```
+
+---
+
+# 1xx - Informational Responses
+
+The `1xx` status codes are **informational responses**.
+
+They indicate that the server has received or is processing the request and that additional information may follow.
+
+Examples include:
+
+```text
+100 Continue
+101 Switching Protocols
+```
+
+These status codes are generally handled automatically by HTTP clients and are less commonly used directly when developing typical FastAPI endpoints.
+
+---
+
+# 2xx - Successful Requests
+
+The `2xx` status codes indicate that the request was successfully received, understood, and processed.
+
+Some important status codes are:
+
+```text
+200 OK
+201 Created
+204 No Content
+```
+
+---
+
+## 200 OK
+
+```text
+200 OK
+```
+
+Indicates that the request was successfully processed.
+
+It is commonly used when retrieving data with a GET request.
+
+Example:
+
+```http
+GET /books
+```
+
+Response:
+
+```http
+200 OK
+```
+
+```json
+[
+  {
+    "id": 1,
+    "title": "Book 1"
+  },
+  {
+    "id": 2,
+    "title": "Book 2"
+  }
+]
+```
+
+Typical usage:
+
+```text
+GET → 200 OK
+```
+
+---
+
+## 201 Created
+
+```text
+201 Created
+```
+
+Indicates that the request was successfully processed and a **new resource was created**.
+
+This is commonly used with POST requests.
+
+For example:
+
+```http
+POST /books
+```
+
+Request:
+
+```json
+{
+  "title": "New Book",
+  "author": "John Doe"
+}
+```
+
+Response:
+
+```http
+201 Created
+```
+
+The server has successfully created the new book.
+
+Typical usage:
+
+```text
+POST → 201 Created
+```
+
+---
+
+## 204 No Content
+
+```text
+204 No Content
+```
+
+Indicates that the request was successfully processed, but the server has **no response body to return**.
+
+For example:
+
+```http
+DELETE /books/1
+```
+
+The server successfully deletes the book but does not need to return any additional data.
+
+The response can be:
+
+```http
+204 No Content
+```
+
+Another common use is for an update operation where no response body is required.
+
+Typical concept:
+
+```text
+Successful operation
+        ↓
+No response body
+        ↓
+204 No Content
+```
+
+> `204 No Content` specifically means the response has no content body. It does not mean that no change occurred.
+
+---
+
+# 4xx - Client Errors
+
+The `4xx` status codes indicate that there is a problem with the client's request.
+
+Common examples include:
+
+```text
+400 Bad Request
+401 Unauthorized
+404 Not Found
+422 Unprocessable Content
+```
+
+---
+
+## 400 Bad Request
+
+```text
+400 Bad Request
+```
+
+Indicates that the server cannot process the request because the request is invalid.
+
+For example, a client might send malformed or invalid request data.
+
+Conceptually:
+
+```text
+Client sends invalid request
+          ↓
+Server cannot process it
+          ↓
+400 Bad Request
+```
+
+---
+
+## 401 Unauthorized
+
+```text
+401 Unauthorized
+```
+
+Indicates that the request lacks valid authentication credentials.
+
+For example:
+
+```text
+Client
+  │
+  │ Request without valid authentication
+  ▼
+Server
+  │
+  ▼
+401 Unauthorized
+```
+
+This is commonly encountered when an API requires authentication and the client has not provided valid credentials.
+
+> Despite the name "Unauthorized", `401` is primarily about **authentication** — establishing who the client is.
+
+---
+
+## 404 Not Found
+
+```text
+404 Not Found
+```
+
+Indicates that the requested resource could not be found.
+
+For example:
+
+```http
+GET /books/999
+```
+
+If book `999` does not exist:
+
+```http
+404 Not Found
+```
+
+Conceptually:
+
+```text
+Client requests resource
+          ↓
+Does resource exist?
+          │
+        No
+          ↓
+404 Not Found
+```
+
+This is one of the most commonly encountered HTTP status codes.
+
+---
+
+## 422 Unprocessable Content
+
+```text
+422 Unprocessable Content
+```
+
+Indicates that the server understood the request structure, but the submitted data failed validation or could not be processed according to the application's rules.
+
+FastAPI commonly uses `422` for **request validation errors**.
+
+For example, suppose our Pydantic model expects:
+
+```python
+class BookRequest(BaseModel):
+    title: str
+    rating: int
+```
+
+But the client sends invalid data:
+
+```json
+{
+  "title": "Python",
+  "rating": "invalid"
+}
+```
+
+FastAPI can return:
+
+```http
+422 Unprocessable Content
+```
+
+because the `rating` field does not satisfy the expected type.
+
+This connects directly to the Pydantic section:
+
+```text
+Request
+   ↓
+Pydantic Validation
+   ↓
+Validation fails
+   ↓
+422 response
+```
+
+> Older FastAPI/Pydantic material may refer to this as **422 Unprocessable Entity**. The current HTTP terminology is **422 Unprocessable Content**.
+
+---
+
+# 5xx - Server Errors
+
+The `5xx` status codes indicate that the server encountered a problem while processing a valid request.
+
+The important status code for this course is:
+
+```text
+500 Internal Server Error
+```
+
+---
+
+## 500 Internal Server Error
+
+```text
+500 Internal Server Error
+```
+
+This is a generic server-side error.
+
+It means that something unexpected happened while the server was processing the request.
+
+For example:
+
+```text
+Client
+  │
+  │ Valid request
+  ▼
+FastAPI
+  │
+  │ Unexpected application error
+  ▼
+500 Internal Server Error
+```
+
+Possible causes can include:
+
+- Unexpected Python exceptions
+- Bugs in application code
+- Unexpected `None` values
+- Database failures
+- Unhandled application errors
+- Other unexpected server-side problems
+
+The important distinction is:
+
+```text
+4xx → Problem with the client's request
+5xx → Problem while processing on the server
+```
+
+---
+
+# Status Code Comparison
+
+| Status Code                 | Meaning                                 | Common Use                          |
+| --------------------------- | --------------------------------------- | ----------------------------------- |
+| `200 OK`                    | Request succeeded                       | GET / successful operation          |
+| `201 Created`               | Resource created                        | POST                                |
+| `204 No Content`            | Request succeeded with no response body | DELETE / update without response    |
+| `400 Bad Request`           | Invalid request                         | Malformed or invalid client request |
+| `401 Unauthorized`          | Authentication required/invalid         | Authentication                      |
+| `404 Not Found`             | Resource not found                      | Missing resource                    |
+| `422 Unprocessable Content` | Request validation/processing failure   | FastAPI validation errors           |
+| `500 Internal Server Error` | Unexpected server-side error            | Unhandled server error              |
+
+---
+
+# Status Codes and CRUD Operations
+
+Status codes can be associated with the CRUD operations we have already learned.
+
+### Create
+
+```text
+POST /books
+```
+
+Successful creation:
+
+```text
+201 Created
+```
+
+---
+
+### Read
+
+```text
+GET /books
+```
+
+Successful retrieval:
+
+```text
+200 OK
+```
+
+---
+
+### Update
+
+```text
+PUT /books/1
+```
+
+Successful update with a response body:
+
+```text
+200 OK
+```
+
+Successful update without a response body:
+
+```text
+204 No Content
+```
+
+---
+
+### Delete
+
+```text
+DELETE /books/1
+```
+
+Successful deletion without a response body:
+
+```text
+204 No Content
+```
+
+---
+
+# Client Errors vs Server Errors
+
+One of the most important concepts is understanding the difference between `4xx` and `5xx`.
+
+## 4xx - Client Error
+
+The request has a problem that is attributable to the client/request.
+
+Examples:
+
+```text
+400 → Bad Request
+401 → Authentication problem
+404 → Resource not found
+422 → Validation problem
+```
+
+Think:
+
+```text
+Client → Invalid/unsuitable request → Server
+```
+
+---
+
+## 5xx - Server Error
+
+The request may be valid, but the server encountered an unexpected problem while processing it.
+
+Example:
+
+```text
+500 → Internal Server Error
+```
+
+Think:
+
+```text
+Client → Valid request → Server → Unexpected failure
+```
+
+---
+
+# Status Code Flow
+
+A simplified API request can be represented as:
+
+```text
+                HTTP Request
+                     │
+                     ▼
+                 FastAPI
+                     │
+             Process Request
+                     │
+        ┌────────────┼────────────┐
+        │            │            │
+        ▼            ▼            ▼
+     Success      Client Error   Server Error
+        │            │            │
+        ▼            ▼            ▼
+      2xx           4xx          5xx
+```
+
+---
+
+# Key Takeaways
+
+### `1xx`
+
+Informational responses.
+
+```text
+1xx → Information
+```
+
+### `2xx`
+
+The request was successfully processed.
+
+```text
+2xx → Success
+```
+
+Important examples:
+
+```text
+200 → OK
+201 → Created
+204 → No Content
+```
+
+### `3xx`
+
+Redirection.
+
+```text
+3xx → Further action required
+```
+
+### `4xx`
+
+There is a problem with the client request.
+
+```text
+4xx → Client Error
+```
+
+Important examples:
+
+```text
+400 → Bad Request
+401 → Unauthorized
+404 → Not Found
+422 → Unprocessable Content
+```
+
+### `5xx`
+
+The server encountered an error while processing the request.
+
+```text
+5xx → Server Error
+```
+
+Important example:
+
+```text
+500 → Internal Server Error
+```
+
+---
+
+# Quick Reference
+
+```text
+HTTP STATUS CODE
+│
+├── 1xx → Informational
+│
+├── 2xx → Success
+│     ├── 200 → OK
+│     ├── 201 → Created
+│     └── 204 → No Content
+│
+├── 3xx → Redirection
+│
+├── 4xx → Client Error
+│     ├── 400 → Bad Request
+│     ├── 401 → Unauthorized
+│     ├── 404 → Not Found
+│     └── 422 → Unprocessable Content
+│
+└── 5xx → Server Error
+      └── 500 → Internal Server Error
+```
+
+## Summary
+
+HTTP status codes provide a standardized way for an API server to communicate the result of a request to the client.
+
+The most important status codes for this FastAPI course are:
+
+```text
+200 → Successful request
+201 → Resource successfully created
+204 → Successful request with no response body
+
+400 → Bad request
+401 → Authentication problem
+404 → Resource not found
+422 → Request validation/processing error
+
+500 → Unexpected server-side error
+```
+
+Using appropriate status codes makes an API easier for clients and developers to understand and is an important part of building professional RESTful APIs.
+
+# SQL Database Introduction
+
+## 1. What Is a Database?
+
+A **database** is an organized collection of structured information (data) stored in a computer system.
+
+A database allows data to be:
+
+- **Stored**
+- **Retrieved**
+- **Modified**
+- **Controlled**
+- **Organized**
+
+Instead of keeping application data scattered across files or memory, a database provides a structured way to manage and work with large amounts of information.
+
+### Simple Example
+
+Consider a user in an application:
+
+| Field    | Example                                       |
+| -------- | --------------------------------------------- |
+| Name     | Vijay                                         |
+| Age      | 25                                            |
+| Email    | [vijay@example.com](mailto:vijay@example.com) |
+| Password | **\*\*\*\***                                  |
+
+These individual values are **data** associated with a user.
+
+A database can store information for many users and allow the application to retrieve or modify that information when needed.
+
+---
+
+## 2. What Is Data?
+
+**Data** is information about an object, person, transaction, or any other entity that an application needs to work with.
+
+For example, for a user:
+
+```text
+Name      → Vijay
+Age       → 25
+Email     → vijay@example.com
+Password  → ********
+```
+
+Each of these values represents a piece of data.
+
+When many pieces of related data are collected and organized, they can be stored in a database.
+
+### Database as a Collection of Data
+
+```text
+Database
+│
+├── User 1
+│   ├── Name
+│   ├── Age
+│   ├── Email
+│   └── Password
+│
+├── User 2
+│   ├── Name
+│   ├── Age
+│   ├── Email
+│   └── Password
+│
+└── User 3
+    ├── Name
+    ├── Age
+    ├── Email
+    └── Password
+```
+
+The database provides the mechanisms needed to **store, retrieve, update, and manage** this information.
+
+---
+
+# 3. Database Management System (DBMS)
+
+A **Database Management System (DBMS)** is software that manages a database.
+
+It acts as the layer between an application and the stored data.
+
+```text
+Application
+     │
+     ▼
+    DBMS
+     │
+     ▼
+  Database
+```
+
+The DBMS is responsible for operations such as:
+
+- Storing data
+- Retrieving data
+- Updating data
+- Deleting data
+- Organizing data
+- Controlling access to data
+
+### Common SQL Database Management Systems
+
+Some popular relational database systems are:
+
+| DBMS           | Description                                                                            |
+| -------------- | -------------------------------------------------------------------------------------- |
+| **SQLite**     | Lightweight database, commonly used for development, testing, and smaller applications |
+| **MySQL**      | Popular relational database system widely used in web applications                     |
+| **PostgreSQL** | Powerful open-source relational database commonly used in production applications      |
+
+In this course, **SQLite** is used as the first DBMS for the application.
+
+---
+
+# 4. What Is SQL?
+
+**SQL** stands for **Structured Query Language**.
+
+It is the standard language used to work with **relational databases**.
+
+SQL is commonly pronounced either:
+
+- **SQL** — "sequel"
+- **SQL** — "S-Q-L"
+
+Both pronunciations are commonly heard in the software industry.
+
+SQL allows an application to interact with data stored in a relational database.
+
+---
+
+# 5. What Is a Relational Database?
+
+A **relational database** organizes data into **tables**.
+
+A table consists of:
+
+- **Rows**
+- **Columns**
+
+This is similar to a spreadsheet such as an Excel sheet.
+
+### Example
+
+Suppose we have a `users` table:
+
+|  id | name  | age | email                                         |
+| --: | ----- | --: | --------------------------------------------- |
+|   1 | Vijay |  25 | [vijay@example.com](mailto:vijay@example.com) |
+|   2 | Arun  |  28 | [arun@example.com](mailto:arun@example.com)   |
+|   3 | Priya |  24 | [priya@example.com](mailto:priya@example.com) |
+
+Here:
+
+- `users` → table
+- `id`, `name`, `age`, `email` → columns
+- Each horizontal entry → row/record
+- Each row represents one user
+
+---
+
+# 6. Database Records
+
+A **database record** generally refers to a single row of data in a table.
+
+For example:
+
+```text
+1 | Vijay | 25 | vijay@example.com
+```
+
+is one record in the `users` table.
+
+Another record might be:
+
+```text
+2 | Arun | 28 | arun@example.com
+```
+
+So:
+
+```text
+Table
+│
+├── Record 1
+├── Record 2
+├── Record 3
+└── Record 4
+```
+
+Each record contains related information about one entity.
+
+---
+
+# 7. What Can SQL Do?
+
+SQL allows us to perform the fundamental operations needed to manage data.
+
+The four primary operations are:
+
+1. **Create**
+2. **Read**
+3. **Update**
+4. **Delete**
+
+These are collectively known as **CRUD operations**.
+
+| CRUD Operation | Purpose                |
+| -------------- | ---------------------- |
+| **Create**     | Add new data           |
+| **Read**       | Retrieve existing data |
+| **Update**     | Modify existing data   |
+| **Delete**     | Remove data            |
+
+---
+
+## 8. SQL and CRUD
+
+Consider a `users` table.
+
+### Create
+
+Add a new user:
+
+```sql
+INSERT INTO users (name, age, email)
+VALUES ('Vijay', 25, 'vijay@example.com');
+```
+
+### Read
+
+Retrieve users:
+
+```sql
+SELECT * FROM users;
+```
+
+### Update
+
+Modify existing data:
+
+```sql
+UPDATE users
+SET age = 26
+WHERE id = 1;
+```
+
+### Delete
+
+Remove a user:
+
+```sql
+DELETE FROM users
+WHERE id = 1;
+```
+
+The exact SQL syntax will be covered in more detail as we work with databases.
+
+---
+
+# 9. CRUD and HTTP Methods
+
+CRUD operations should look familiar because they correspond closely to the HTTP methods used by our FastAPI application.
+
+| CRUD       | Database/SQL | HTTP            | Typical FastAPI Operation |
+| ---------- | ------------ | --------------- | ------------------------- |
+| **Create** | `INSERT`     | `POST`          | Create a resource         |
+| **Read**   | `SELECT`     | `GET`           | Retrieve a resource       |
+| **Update** | `UPDATE`     | `PUT` / `PATCH` | Modify a resource         |
+| **Delete** | `DELETE`     | `DELETE`        | Remove a resource         |
+
+### Overall Flow
+
+```text
+Client
+  │
+  │ HTTP Request
+  ▼
+FastAPI Application
+  │
+  │ SQL / Database Operation
+  ▼
+DBMS
+  │
+  ▼
+Database
+```
+
+For example:
+
+```text
+POST /users
+     │
+     ▼
+FastAPI
+     │
+     ▼
+INSERT
+     │
+     ▼
+Database
+```
+
+For retrieving data:
+
+```text
+GET /users
+     │
+     ▼
+FastAPI
+     │
+     ▼
+SELECT
+     │
+     ▼
+Database
+     │
+     ▼
+FastAPI Response
+     │
+     ▼
+Client
+```
+
+---
+
+# 10. SQL Database vs DBMS
+
+These terms are related but represent different concepts.
+
+### Database
+
+The actual organized collection of data.
+
+```text
+Users
+├── Vijay
+├── Arun
+└── Priya
+```
+
+### DBMS
+
+The software that manages the database.
+
+Examples:
+
+- SQLite
+- MySQL
+- PostgreSQL
+
+### SQL
+
+The language used to communicate with a relational database.
+
+```text
+Application
+     │
+     │ SQL
+     ▼
+    DBMS
+     │
+     ▼
+  Database
+```
+
+A simple way to remember the relationship:
+
+> **Database = Data**
+> **DBMS = Software that manages the data**
+> **SQL = Language used to work with the data**
+
+---
+
+# 11. Key Concepts to Remember
+
+| Concept                 | Meaning                                             |
+| ----------------------- | --------------------------------------------------- |
+| **Data**                | Individual pieces of information                    |
+| **Database**            | Organized collection of data                        |
+| **DBMS**                | Software that manages a database                    |
+| **SQL**                 | Language used to interact with relational databases |
+| **Relational Database** | Database that organizes data into related tables    |
+| **Table**               | Structured collection of rows and columns           |
+| **Column**              | Defines a particular type/attribute of data         |
+| **Row / Record**        | Represents one stored data entry                    |
+| **CRUD**                | Create, Read, Update, Delete                        |
+
+---
+
+# 12. FastAPI Database Architecture
+
+As we continue building the FastAPI application, the database will become the persistent storage layer.
+
+A simplified architecture is:
+
+```text
+┌──────────────┐
+│    Client    │
+│ Browser / FE │
+└──────┬───────┘
+       │
+       │ HTTP
+       ▼
+┌──────────────┐
+│   FastAPI    │
+│   Backend    │
+└──────┬───────┘
+       │
+       │ SQL
+       ▼
+┌──────────────┐
+│     DBMS     │
+│ SQLite /     │
+│ PostgreSQL   │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│   Database   │
+│    Tables    │
+└──────────────┘
+```
+
+This separates the responsibilities:
+
+- **Client** → Sends requests
+- **FastAPI** → Handles API/business logic
+- **DBMS** → Manages database operations
+- **Database** → Stores persistent application data
+
+---
+
+## Summary
+
+- A **database** is an organized collection of data.
+- Data can be stored, retrieved, modified, and deleted.
+- A **DBMS (Database Management System)** is software used to manage a database.
+- **SQLite, MySQL, and PostgreSQL** are examples of relational DBMSs.
+- **SQL (Structured Query Language)** is used to interact with relational databases.
+- Relational databases organize data into **tables containing rows and columns**.
+- A row is commonly called a **record**.
+- SQL supports the fundamental **CRUD** operations:
+  - **Create**
+  - **Read**
+  - **Update**
+  - **Delete**
+
+- These operations map closely to HTTP methods used by FastAPI:
+  - `POST` → Create
+  - `GET` → Read
+  - `PUT/PATCH` → Update
+  - `DELETE` → Delete
+
+The key idea is:
+
+```text
+FastAPI
+   ↓
+SQL
+   ↓
+DBMS
+   ↓
+Database
+   ↓
+Tables / Records
+```
